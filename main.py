@@ -114,6 +114,8 @@ class MyWidget(QMainWindow):
                 self.table.setText(str(self.data))
             except ZeroDivisionError:
                 self.table.setText('can"t be divided by zero')
+                self.data = ''
+                self.data_eval = ''
             except Exception:
                 self.table.setText('Error')
         self.data = ''
@@ -159,7 +161,9 @@ class MyWidget(QMainWindow):
                 self.update_table()
                 self.result()
         except Exception:
-            self.talbe.setText('Error')
+            self.table.setText('Error')
+            self.data = ''
+            self.data_eval = ''
 
     # функция котангенса
     def ctg(self):
@@ -175,8 +179,12 @@ class MyWidget(QMainWindow):
                 self.result()
         except ZeroDivisionError:
             self.table.setText("This value doesn't exist")
+            self.data = ''
+            self.data_eval = ''
         except Exception:
             self.table.setText("Error")
+            self.data = ''
+            self.data_eval = ''
 
     # убирает один разряд из числа
     def backspace(self):
