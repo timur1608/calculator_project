@@ -3,6 +3,10 @@ import sys
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import QButtonGroup
+from PyQt5.QtWidgets import QTableWidgetItem, QTableWidget
+from sqligther import SQLighter
+from PyQt5.QtGui import QIcon
+import datetime
 import math
 
 
@@ -10,6 +14,12 @@ class MyWidget(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('design.ui', self)
+        # Конфигурация окна
+        self.setWindowIcon(QIcon('img/icon.png'))
+        self.setWindowTitle('Калькулятор с историей вычислений')
+        # Подключаем базу данных
+        self.lighter = SQLighter('db/calculation_history.db')
+        self.update_table()
         # ## Подключаем цифры
         self.buttonGroup_digits = QButtonGroup()
         self.buttonGroup_binary = QButtonGroup()
@@ -39,17 +49,20 @@ class MyWidget(QMainWindow):
         # Подключаем остальные функции
         self.btn_back.clicked.connect(self.backspace)
         self.btn_reverse.clicked.connect(self.reverse)
+        self.btn_delete.clicked.connect(self.delete_selected_items)
 
         ## Переменная, в которых хранятся последнее введённое число/результат вычисленного выражения
         self.data = ''
         ## Переменная, в которых хранятся выражение, которое нужно подсчитать
         self.data_eval = ''
 
+    # вычисление факториала
     def real_fact(self, n):
         if n == 0:
             return 1
         return n * self.real_fact(n - 1)
 
+    # функция факториала числа
     def fact(self):
         try:
             if self.data_eval:
@@ -65,8 +78,8 @@ class MyWidget(QMainWindow):
         self.data_eval = ''
         self.table.setText('0')
 
+    ## Формируется число, с помощью нажатий кнопок и отображается на дисплее
     def run(self):
-        ## Формируется число, с помощью нажатий кнопок и отображается на дисплее
         try:
             if self.sender().text() == '.':
                 if '.' in self.data:
@@ -94,7 +107,9 @@ class MyWidget(QMainWindow):
         except:
             try:
                 self.data = eval(self.data_eval)
+                self.lighter.save_results(self.data_eval, self.data, datetime.datetime.now())
                 self.data_eval = str(self.data)
+                self.update_table()
                 self.table.setText(str(self.data))
             except Exception:
                 self.table.setText('Error')
@@ -110,45 +125,97 @@ class MyWidget(QMainWindow):
                 self.data_eval = self.data_eval[0:len(self.data_eval) - 1] + self.sender().text()
             self.data_eval = self.data_eval.replace('^', '**')
 
+    # функция синуса
     def sin(self):
         if self.data_eval:
-            self.data_eval = str(math.sin(float(self.data_eval)))
-            self.table.setText(self.data_eval)
+            self.data = str(math.sin(float(self.data_eval)))
+            self.table.setText(self.data)
+            self.lighter.save_results(f'sin({self.data_eval})', self.data, datetime.datetime.now())
+            self.data_eval = str(self.data)
+            self.update_table()
             self.result()
 
+    # функция косинуса
     def cos(self):
         if self.data_eval:
-            self.data_eval = str(math.cos(float(self.data_eval)))
-            self.table.setText(self.data_eval)
+            self.data = str(math.cos(float(self.data_eval)))
+            self.table.setText(self.data)
+            self.lighter.save_results(f'cos({self.data_eval})', self.data, datetime.datetime.now())
+            self.data_eval = str(self.data)
+            self.update_table()
             self.result()
 
+    # функция тангенса
     def tg(self):
         try:
             if self.data_eval:
-                self.data_eval = str(math.tan(float(self.data_eval)))
-                self.table.setText(self.data_eval)
+                self.data = str(math.tan(float(self.data_eval)))
+                self.table.setText(self.data)
+                self.lighter.save_results(f'tg({self.data_eval})', self.data, datetime.datetime.now())
+                self.data_eval = str(self.data)
+                self.update_table()
                 self.result()
         except Exception:
             self.talbe.setText('Error')
 
+    # функция котангенса
     def ctg(self):
         try:
+            if self.data_eval == '0':
+                raise ZeroDivisionError
             if self.data_eval:
-                self.data_eval = str(math.cos(float(self.data_eval)) / math.sin(float(self.data_eval)))
-                self.table.setText(self.data_eval)
+                self.data = str(math.cos(float(self.data_eval)) / math.sin(float(self.data_eval)))
+                self.lighter.save_results(f'ctg({self.data_eval})', self.data, datetime.datetime.now())
+                self.data_eval = str(self.data)
+                self.table.setText(self.data)
+                self.update_table()
                 self.result()
+        except ZeroDivisionError:
+            self.table.setText("This value doesn't exist")
         except Exception:
             self.table.setText("Error")
 
+    # убирает один разряд из числа
     def backspace(self):
         if self.data_eval:
             self.data_eval = self.data_eval[:-1]
             self.table.setText(self.data_eval)
 
+    # Переворачивает число, делая его противоположным
     def reverse(self):
         if self.data_eval:
             self.data_eval = str((-(float(self.data_eval))))
             self.table.setText(self.data_eval)
+
+    # Функция для вывода истории вычислений в журнал
+    def update_table(self):
+        self.tableWidget.setColumnCount(4)
+        # Достаём все вычисления из базы данных
+        result = self.lighter.show_results()[::-1]
+        self.tableWidget.setRowCount(len(result))
+        for j, i in enumerate(['Id', 'Expression', 'result', 'time']):
+            item = QTableWidgetItem()
+            item.setText(i)
+            self.tableWidget.setHorizontalHeaderItem(j, item)
+            # Настройка размеров каждой колонки
+            if j == 0:
+                self.tableWidget.setColumnWidth(j, 10)
+            elif j == 1:
+                self.tableWidget.setColumnWidth(j, 150)
+            elif j == 2:
+                self.tableWidget.setColumnWidth(j, 130)
+            elif j == 3:
+                self.tableWidget.setColumnWidth(j, 150)
+        for i, elem in enumerate(result):
+            for j, val in enumerate(elem):
+                self.tableWidget.setItem(i, j, QTableWidgetItem(str(val)))
+
+    # Функция удаления выбранных вычислений из истории
+    def delete_selected_items(self):
+        rows = list(set([i.row() for i in self.tableWidget.selectedItems()]))
+        ids = [self.tableWidget.item(i, 0).text() for i in rows]
+        self.lighter.remove_results(ids=ids)
+        self.update_table()
 
 
 if __name__ == '__main__':

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>678</width>
+    <width>864</width>
     <height>410</height>
    </rect>
   </property>
@@ -944,14 +944,41 @@ QPushButton:hover {
     <string>.</string>
    </property>
   </widget>
-  <widget class="QTableView" name="tableView">
+  <widget class="QTableWidget" name="tableWidget">
    <property name="geometry">
     <rect>
-     <x>425</x>
+     <x>420</x>
      <y>40</y>
-     <width>241</width>
+     <width>431</width>
      <height>351</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btn_delete">
+   <property name="geometry">
+    <rect>
+     <x>650</x>
+     <y>10</y>
+     <width>201</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton {
+  background-color: rgb(255, 151, 57);
+  color: black; 
+  border: 1px solid gray;
+}
+QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                      stop: 0 #FF7832, stop: 1 #FF9739);
+}
+QPushButton:hover {
+   border: 2px solid gray;
+}</string>
+   </property>
+   <property name="text">
+    <string>Delete selected items</string>
    </property>
   </widget>
  </widget>
