@@ -95,6 +95,7 @@ class MyWidget(QMainWindow):
         except Exception:
             self.table.setText('Error')
 
+    # Функция вычисления корня из числа
     def sqrt(self):
         if self.data_eval:
             self.data_eval += '**0.5'
