@@ -112,6 +112,8 @@ class MyWidget(QMainWindow):
                 self.data_eval = str(self.data)
                 self.update_table()
                 self.table.setText(str(self.data))
+            except ZeroDivisionError:
+                self.table.setText('can"t be divided by zero')
             except Exception:
                 self.table.setText('Error')
         self.data = ''
